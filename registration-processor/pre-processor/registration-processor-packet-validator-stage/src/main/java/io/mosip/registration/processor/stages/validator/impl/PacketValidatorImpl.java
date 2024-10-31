@@ -129,6 +129,8 @@ public class PacketValidatorImpl implements PacketValidator {
 				}
 				String status = utility.retrieveIdrepoJsonStatus(uin);
 				if (process.equalsIgnoreCase(RegistrationType.UPDATE.toString())
+						&& status.equalsIgnoreCase(RegistrationType.DEACTIVATED.toString()) ||
+						process.equalsIgnoreCase(RegistrationType.RENEWAL.toString())
 						&& status.equalsIgnoreCase(RegistrationType.DEACTIVATED.toString())) {
 					regProcLogger.error(LoggerFileConstant.SESSIONID.toString(),
 							LoggerFileConstant.REGISTRATIONID.toString(), id,
