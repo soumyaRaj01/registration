@@ -154,6 +154,9 @@ public class MessageNotificationServiceImpl
 
 	@Value("${mosip.default.user-preferred-language-attribute:#{null}}")
 	private String userPreferredLanguageAttribute;
+	
+	@Value("${mosip.regproc.masked:false}")
+	private boolean ismasked;
 
 	/** The resclient. */
 	@Autowired
@@ -451,6 +454,21 @@ public class MessageNotificationServiceImpl
 		if (idType.toString().equalsIgnoreCase(UIN)) {
 			JSONObject jsonObject = utility.idrepoRetrieveIdentityByRid(id);
 			uin = JsonUtil.getJSONValue(jsonObject, UIN);
+			String maskedNin="" ;
+			String NIN = (jsonObject != null && JsonUtil.getJSONValue(jsonObject, "NIN") != null)
+					? JsonUtil.getJSONValue(jsonObject, "NIN")
+					: "";
+
+			if (NIN.length() >= 7) {
+				maskedNin = "*******" + NIN.substring(7);
+			}
+			
+			if(ismasked==true)
+			attributes.put("MASKEDNIN",maskedNin );
+			
+			else 
+				attributes.put("MASKEDNIN",NIN );
+			
 			attributes.put("RID", id);
 			attributes.put("UIN", uin);
 			attributes.put("VID", getVid(uin));

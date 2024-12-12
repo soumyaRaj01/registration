@@ -10,14 +10,9 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import java.util.*;
-import io.mosip.registration.processor.core.idrepo.dto.IdRequestDTO1;
-
 
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
@@ -609,7 +604,7 @@ public class Utilities {
 			throws IOException, ApisResourceAccessException, PacketManagerException, JsonProcessingException {
 		regProcLogger.debug(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.REGISTRATIONID.toString(), id,
 				"Utilities::getUINByHandle()::entry");
-		String handle = packetManagerService.getFieldByMappingJsonKey(id, MappingJsonConstants.NRCID, process, stageName);
+		String handle = packetManagerService.getFieldByMappingJsonKey(id, MappingJsonConstants.NIN, process, stageName);
 		regProcLogger.debug(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.REGISTRATIONID.toString(), id,
 				"Utilities::getUINByHandle()::handleRetrieved");
 		JSONObject jsonObject = getIdentityJSONObjectByHandle(handle);
@@ -618,11 +613,26 @@ public class Utilities {
 
 	public JSONObject getIdentityJSONObjectByHandle(String handle) throws ApisResourceAccessException {
 		if (handle != null) {
-			IdRequestDTO1 idRequestDTO = new IdRequestDTO1();
-			idRequestDTO.setId(handle.concat("@nrcid"));
-			idRequestDTO.setIdType("handle");
+			List<String> pathSegments = new ArrayList<>();
+			pathSegments.add(handle.toLowerCase() + "@nin");
+			IdResponseDTO1 idResponseDto;
 
-			IdResponseDTO1 idResponseDto = (IdResponseDTO1) restClientService.postApi(ApiName.IDREPORETRIEVEIDBYID, "", "", idRequestDTO, IdResponseDTO1.class);
+			String typeParam = "type";
+			String typeParamValue = "all";
+			String typeIdParam = "idType";
+			String typeIdParamValue = "handle";
+
+			List<String> queryParams = new ArrayList<>();
+			queryParams.add(typeParam);
+			queryParams.add(typeIdParam);
+
+			List<Object> queryParamValues = new ArrayList<Object>();
+			queryParamValues.add(typeParamValue);
+			queryParamValues.add(typeIdParamValue);
+
+
+			idResponseDto = (IdResponseDTO1) restClientService.getApi(ApiName.RETRIEVEIDENTITY, pathSegments,
+					queryParams, queryParamValues, IdResponseDTO1.class);
 			regProcLogger.debug(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.UIN.toString(), "",
 					"Utilities::getUINByHandle():: IDREPORETRIEVEIDBYID POST service call ended Successfully");
 

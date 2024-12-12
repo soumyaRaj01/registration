@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.*;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
@@ -250,18 +249,20 @@ public class UinGeneratorStage extends MosipVerticleAPIManager {
 				Map<String, String> fieldMap = packetManagerService.getFields(registrationId,
 						idSchemaUtil.getDefaultFields(Double.valueOf(schemaVersion)), registrationStatusDto.getRegistrationType(), ProviderStageName.UIN_GENERATOR);
 				String uinField = fieldMap.get(utility.getMappingJsonValue(MappingJsonConstants.UIN, MappingJsonConstants.IDENTITY));
-
+				JSONObject demographicIdentity = new JSONObject();
 				if ((StringUtils.isEmpty(uinField) || uinField.equalsIgnoreCase("null"))
-						&& (RegistrationType.UPDATE.toString().equalsIgnoreCase(object.getReg_type())
-						|| (RegistrationType.RES_UPDATE.toString().equalsIgnoreCase(object.getReg_type())))) {
-					String handleField = fieldMap.get(MappingJsonConstants.NRCID);
+				        && (RegistrationType.UPDATE.toString().equalsIgnoreCase(object.getReg_type())
+				                || RegistrationType.RES_UPDATE.toString().equalsIgnoreCase(object.getReg_type())
+				                || RegistrationType.RENEWAL.toString().equalsIgnoreCase(object.getReg_type()))) {
+					String handleField = fieldMap.get(MappingJsonConstants.NIN);
 					if (StringUtils.isNotEmpty(handleField) && !handleField.equalsIgnoreCase("null")) {
 						JSONObject jsonObject = utility.getIdentityJSONObjectByHandle(handleField);
 						uinField = JsonUtil.getJSONValue(jsonObject, "UIN");
+						demographicIdentity.put("UIN", uinField);
 					}
 				}
 
-				JSONObject demographicIdentity = new JSONObject();
+
 				demographicIdentity.put(MappingJsonConstants.IDSCHEMA_VERSION, convertIdschemaToDouble ? Double.valueOf(schemaVersion) : schemaVersion);
 
 				loadDemographicIdentity(fieldMap, demographicIdentity);
@@ -332,7 +333,8 @@ public class UinGeneratorStage extends MosipVerticleAPIManager {
 								description);
 					} else if (RegistrationType.UPDATE.toString().equalsIgnoreCase(object.getReg_type())
 							|| (RegistrationType.RES_UPDATE.toString()
-									.equalsIgnoreCase(object.getReg_type()))) {
+									.equalsIgnoreCase(object.getReg_type()))
+							|| RegistrationType.RENEWAL.toString().equalsIgnoreCase(object.getReg_type())) {
 						isTransactionSuccessful = uinUpdate(registrationId, registrationStatusDto.getRegistrationType(), uinField, object, demographicIdentity,
 								description);
 					}
