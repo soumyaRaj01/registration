@@ -242,7 +242,7 @@ public class AnonymousProfileServiceImplTest {
 				.thenReturn(doc2).thenReturn(new FieldValue("centerId", "1003"))
 				.thenReturn(new FieldValue("officerId", "110024"));
 		assertEquals(json, anonymousProfileService.buildJsonStringFromPacketInfo(biometricRecord, fieldMap,
-				fieldTypeMap, metaInfoMap, "PROCESSED", "packetValidatorStage"));;
+				fieldTypeMap, metaInfoMap, "PROCESSED", "packetValidatorStage"));
 	}
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
