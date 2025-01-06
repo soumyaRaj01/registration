@@ -85,5 +85,9 @@ public enum ModuleName {
 	
 	CITIZENSHIP_VERIFICATION,
 
+	LEGACY_DATA_VALIDATE,
+
+	LEGACY_DATA,
+
 	MVS
 }

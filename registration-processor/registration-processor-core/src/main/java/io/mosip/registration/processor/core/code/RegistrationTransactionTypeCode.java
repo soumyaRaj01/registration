@@ -71,5 +71,7 @@ public enum RegistrationTransactionTypeCode {
 	
 	CITIZENSHIP_VERIFICATION,
 
-	MVS
+	MVS,
+
+	LEGACY_DATA_VALIDATE, LEGACY_DATA;
 }
