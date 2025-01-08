@@ -295,7 +295,7 @@ public class MVSServiceImpl implements MVSService {
 
 		TrimExceptionMessage trimExceptionMessage = new TrimExceptionMessage();
 		LogDescription description = new LogDescription();
-		boolean isTransactionSuccessful = false;
+		boolean isTransactionSuccessful = true;
 
 		regProcLogger.debug(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.REFERENCEID.toString(),
 				mvsResponseDTO.getRequestId(), "VerificationServiceImpl::updatePacketStatus()::entry");
@@ -312,9 +312,9 @@ public class MVSServiceImpl implements MVSService {
 			registrationStatusDto.setLatestTransactionTypeCode(RegistrationTransactionTypeCode.MVS.name());
 			registrationStatusDto.setRegistrationStageName(stageName);
 			messageDTO.setInternalError(false);
-			messageDTO.setIsValid(false);
+            messageDTO.setIsValid(mvsResponseDTO.getReturnValue() == 0);
 			messageDTO.setRid(regId);
-//			messageDTO.setReg_type(registrationStatusDto.getRegistrationType());
+			messageDTO.setReg_type(registrationStatusDto.getRegistrationType());
 
 //			List<VerificationEntity> entities = retrieveInqueuedRecordsByRid(regId);
 
