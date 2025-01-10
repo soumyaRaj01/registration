@@ -72,7 +72,7 @@ public class MVSResponseDTO {
 		return status;
 	}
 
-	public void setReturnValue(String status) {
+	public void setStatus(String status) {
 		this.status = status;
 	}
 	
