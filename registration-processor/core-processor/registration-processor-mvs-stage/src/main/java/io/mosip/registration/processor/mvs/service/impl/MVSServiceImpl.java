@@ -312,7 +312,7 @@ public class MVSServiceImpl implements MVSService {
 			registrationStatusDto.setLatestTransactionTypeCode(RegistrationTransactionTypeCode.MVS.name());
 			registrationStatusDto.setRegistrationStageName(stageName);
 			messageDTO.setInternalError(false);
-            messageDTO.setIsValid(mvsResponseDTO.getStatus() == "APPROVED");
+            messageDTO.setIsValid("APPROVED".equals(mvsResponseDTO.getStatus()));
 			messageDTO.setRid(regId);
 			messageDTO.setReg_type(registrationStatusDto.getRegistrationType());
 
