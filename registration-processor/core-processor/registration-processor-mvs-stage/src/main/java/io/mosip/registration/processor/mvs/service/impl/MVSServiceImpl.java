@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -465,7 +466,10 @@ public class MVSServiceImpl implements MVSService {
 				packetManagerService.getFields(id, demographicMap.values().stream().collect(Collectors.toList()),
 						process, ProviderStageName.MVS));
 
-		verReq.setServiceType(requestDto.getIdentity().get("userServiceType"));
+		JSONArray userServiceTypeArray = new JSONArray(requestDto.getIdentity().get("userServiceType"));
+		String userServiceTypeValue = userServiceTypeArray.getJSONObject(0).getString("value");
+		
+		verReq.setServiceType(userServiceTypeValue);
 		verReq.setSchemaVersion(requestDto.getIdentity().get("IDSchemaVersion"));
 		
 		// set documents

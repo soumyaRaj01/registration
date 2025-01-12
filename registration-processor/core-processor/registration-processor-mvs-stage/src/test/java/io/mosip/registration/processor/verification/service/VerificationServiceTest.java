@@ -316,6 +316,10 @@ public class VerificationServiceTest {
 
 		Map<String, String> identity = new HashMap<String, String>();
 		identity.put("fullName", "Satish");
+		identity.put("userServiceType", "[ {\r\n"
+				+ "  \"language\" : \"eng\",\r\n"
+				+ "  \"value\" : \"By Registration\"\r\n"
+				+ "} ]");
 
 		Map<String, String> metaInfo = new HashMap<String, String>();
 		metaInfo.put("registrationId", "92379526572940");
