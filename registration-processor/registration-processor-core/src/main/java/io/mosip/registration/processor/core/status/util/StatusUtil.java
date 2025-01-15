@@ -377,6 +377,10 @@ public enum StatusUtil {
 	VERIFICATION_SENT(StatusConstants.VERIFICATION_STAGE + "003", "Sent for verification"),
 	VERIFICATION_RESEND(StatusConstants.VERIFICATION_STAGE + "004", "Resend for verification"),
 	
+	MVS_SUCCESS(StatusConstants.MVS_STAGE + "001", "Manual verification from MVS success"),
+	MVS_FAILED(StatusConstants.MVS_STAGE + "002", "Manual verification from MVS failed"),
+	MVS_SENT(StatusConstants.MVS_STAGE + "003", "Sent for verification to MVS"),
+	
 	// Payment validator stage
 	PAYMENT_VALIDATION_SUCCESS(StatusConstants.PAYMENT_VALIDATOR_STAGE + "001", "Payment Validation success"),
 	PAYMENT_VALIDATION_FAILED(StatusConstants.PAYMENT_VALIDATOR_STAGE + "002", "Payment Validation failed"),
