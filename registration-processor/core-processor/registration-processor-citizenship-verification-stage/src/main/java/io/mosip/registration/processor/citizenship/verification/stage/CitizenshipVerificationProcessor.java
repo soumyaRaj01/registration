@@ -100,9 +100,19 @@ public class CitizenshipVerificationProcessor {
 		object.setInternalError(Boolean.FALSE);
 
 		regProcLogger.debug("Process called for registrationId {}", registrationId);
+		
+		
+		regProcLogger.debug("Registration Type: {}", object.getReg_type());
+		regProcLogger.debug("Iteration: {}", object.getIteration());
+		regProcLogger.debug("Workflow Instance ID: {}", object.getWorkflowInstanceId());
 
 		InternalRegistrationStatusDto registrationStatusDto = registrationStatusService.getRegistrationStatus(
 				registrationId, object.getReg_type(), object.getIteration(), object.getWorkflowInstanceId());
+		
+		if (registrationStatusDto == null) {
+		    registrationStatusDto = new InternalRegistrationStatusDto();
+		    regProcLogger.warn("Initialized registrationStatusDto with a default instance for registrationId {}", registrationId);
+		}
 
 		registrationStatusDto
 				.setLatestTransactionTypeCode(RegistrationTransactionTypeCode.CITIZENSHIP_VERIFICATION.toString());
@@ -219,19 +229,20 @@ public class CitizenshipVerificationProcessor {
 
 		try {
 			regProcLogger.info("Starting citizenship validation for registration ID: {}", registrationId);
+		    regProcLogger.info("Registration type: {}", object.getReg_type());
 			// Consolidate fields into a single list,
 			List<String> fieldsToFetch = new ArrayList<>(List.of(MappingJsonConstants.APPLICANT_TRIBE,
 					MappingJsonConstants.APPLICANT_CITIZENSHIPTYPE, MappingJsonConstants.APPLICANT_DATEOFBIRTH,
-					MappingJsonConstants.APPLICANT_CLAN,
-					MappingJsonConstants.FATHER_NIN, MappingJsonConstants.FATHER_TRIBE,
-					MappingJsonConstants.FATHER_CLAN,MappingJsonConstants.MOTHER_NIN,
-					MappingJsonConstants.MOTHER_TRIBE, MappingJsonConstants.MOTHER_CLAN,
-					MappingJsonConstants.GUARDIAN_NIN,MappingJsonConstants.GUARDIAN_RELATION_TO_APPLICANT,
-					MappingJsonConstants.GUARDIAN_TRIBE_FORM, MappingJsonConstants.GUARDIAN_CLAN_FORM
-
+					MappingJsonConstants.APPLICANT_CLAN,MappingJsonConstants.FATHER_NIN, 
+					MappingJsonConstants.MOTHER_NIN,MappingJsonConstants.GUARDIAN_NIN,
+					MappingJsonConstants.GUARDIAN_RELATION_TO_APPLICANT
 			));
+			
+			// Log the fields being fetched
+	        regProcLogger.info("Fields to fetch for registration ID {}: {}", registrationId, fieldsToFetch);
 
 			// Fetch all fields in a single call
+			regProcLogger.info("Sending API request for registration ID: {}", registrationId);
 			Map<String, String> applicantFields = utility.getPacketManagerService().getFields(registrationId,
 					fieldsToFetch, object.getReg_type(), ProviderStageName.CITIZENSHIP_VERIFICATION);
 
@@ -254,6 +265,7 @@ public class CitizenshipVerificationProcessor {
 			System.out.println("****************************************************citizenshipType" + citizenshipType);
 			if (!CitizenshipType.BIRTH.getCitizenshipType().equalsIgnoreCase(citizenshipType)) {
 				regProcLogger.info("Citizenship verification failed: Not Citizen By Birth");
+				
 				logAndSetStatusError(registrationStatusDto,
 						"Citizenship verification failed: Not Citizen By Birth for registrationId: " + registrationId,
 						StatusUtil.CITIZENSHIP_VERIFICATION_NOT_CITIZEN_BYBIRTH.getCode(),
@@ -308,14 +320,13 @@ public class CitizenshipVerificationProcessor {
 	        InternalRegistrationStatusDto registrationStatusDto, LogDescription description) {
 
 	    regProcLogger.info("Citizenship verification proceed: Handling validation with parents NIN found");
-	    boolean isParentInfoValid = false;
+	    
 	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(MappingJsonConstants.DATE_FORMAT);
 
+	    String motherNIN = applicantFields.get(MappingJsonConstants.MOTHER_NIN);
 	    String fatherNIN = applicantFields.get(MappingJsonConstants.FATHER_NIN);
 	    regProcLogger.info("Father's NIN: " + fatherNIN);
-
-	    String motherNIN = applicantFields.get(MappingJsonConstants.MOTHER_NIN);
-	    regProcLogger.info("Mother's NIN: " + motherNIN);
+        regProcLogger.info("Mother's NIN: " + motherNIN);
 
 	    LocalDate applicantDob = parseDate(applicantFields.get(MappingJsonConstants.APPLICANT_DATEOFBIRTH), formatter);
 	    regProcLogger.info("Parsed applicant date of birth from string '" + applicantDob + "' to LocalDate: " + applicantDob);
@@ -324,7 +335,9 @@ public class CitizenshipVerificationProcessor {
 	        regProcLogger.error("Invalid applicant date of birth.");
 	        return false;
 	    }
-
+        
+	    boolean isParentInfoValid = false;
+	    
 	    if (fatherNIN != null) {
 	        isParentInfoValid = validateParentInfo(fatherNIN, "FATHER", applicantFields, applicantDob, formatter,
 	                registrationStatusDto, description);
@@ -335,7 +348,10 @@ public class CitizenshipVerificationProcessor {
 	                registrationStatusDto, description);
 	    }
 
-	    regProcLogger.error("Neither parent's NIN is provided.");
+	 // Log error only if both NINs are missing or invalid
+	    if (!isParentInfoValid && (fatherNIN == null && motherNIN == null)) {
+	        regProcLogger.error("Neither parent's NIN is provided.");
+	    }
 	    return isParentInfoValid;
 	}
 
@@ -454,10 +470,8 @@ public class CitizenshipVerificationProcessor {
 		person2Map.put(MappingJsonConstants.PERSON, "Applicant");
 		ObjectMapper objectMapper = new ObjectMapper();
 
-		extractAndPutValue(person2Map, MappingJsonConstants.TRIBE,
-				applicantFields.get(MappingJsonConstants.APPLICANT_TRIBE), objectMapper);
-		extractAndPutValue(person2Map, MappingJsonConstants.CLAN,
-				applicantFields.get(MappingJsonConstants.APPLICANT_CLAN), objectMapper);
+		extractAndPutValue(person2Map, MappingJsonConstants.TRIBE,applicantFields.get(MappingJsonConstants.APPLICANT_TRIBE), objectMapper);
+		extractAndPutValue(person2Map, MappingJsonConstants.CLAN,applicantFields.get(MappingJsonConstants.APPLICANT_CLAN), objectMapper);
 
 		return person2Map;
 	}
@@ -525,8 +539,7 @@ public class CitizenshipVerificationProcessor {
 			regProcLogger.info("GUARDIAN_NIN: " + guardianNin);
 		}
 
-		String guardianRelationToApplicantJson = applicantFields
-				.get(MappingJsonConstants.GUARDIAN_RELATION_TO_APPLICANT);
+		String guardianRelationToApplicantJson = applicantFields.get(MappingJsonConstants.GUARDIAN_RELATION_TO_APPLICANT);
 		regProcLogger.info("GUARDIAN_RELATION_TO_APPLICANT: " + guardianRelationToApplicantJson);
 
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -557,15 +570,14 @@ public class CitizenshipVerificationProcessor {
 				return false;
 			}
 			
-			if (guardianRelationValue.equalsIgnoreCase(Relationship.FIRST_COUSIN.getRelationship())) {
-	            return true; // validate NIN usage for FIRST_COUSIN
-	        }
+			if (guardianRelationValue.equalsIgnoreCase(Relationship.FIRST_COUSIN_FATHERS_SIDE.getRelationship()) 
+				    || guardianRelationValue.equalsIgnoreCase(Relationship.FIRST_COUSIN_MOTHERS_SIDE.getRelationship())) {
+				    return true; // validate NIN usage for 1st Cousin (Father's side or Mother's side)
+				}
+
 
 			JSONObject guardianInfoJson = utility.getIdentityJSONObjectByHandle(guardianNin);
 			regProcLogger.info("guardianInfoJson: " + guardianInfoJson);
-
-			String status = utility.retrieveIdrepoJsonStatusForNIN(guardianNin);
-			regProcLogger.info("status: " + status);
 
 			if (guardianRelationValue.equalsIgnoreCase(Relationship.GRAND_FATHER_ON_FATHERS_SIDE.getRelationship())
 					|| Relationship.GRAND_FATHER_ON_MOTHERS_SIDE.getRelationship()
@@ -578,15 +590,19 @@ public class CitizenshipVerificationProcessor {
 		            isValidGuardian = validateGrandmotherRelationship(applicantFields, guardianInfoJson,
 		                    registrationStatusDto, description);
 
-			} else if (guardianRelationValue.equalsIgnoreCase(Relationship.BROTHER_OR_SISTER.getRelationship())) {
+			} else if (guardianRelationValue.equalsIgnoreCase(Relationship.BROTHER.getRelationship())
+				    || guardianRelationValue.equalsIgnoreCase(Relationship.SISTER.getRelationship())) {
 				isValidGuardian = validateSiblingRelationship(applicantFields, guardianInfoJson, registrationStatusDto,
 						description);
 
-			} else if (guardianRelationValue.equalsIgnoreCase(Relationship.MATERNAL_UNCLE_OR_AUNT.getRelationship())
-					|| Relationship.PATERNAL_UNCLE_OR_AUNT.getRelationship().equalsIgnoreCase(guardianRelationValue)) {
-				isValidGuardian = validateUncleAuntRelationship(applicantFields, guardianInfoJson,
-						registrationStatusDto, description);
+			} else if (guardianRelationValue.equalsIgnoreCase(Relationship.MATERNAL_AUNT.getRelationship()) 
+			        || guardianRelationValue.equalsIgnoreCase(Relationship.PATERNAL_AUNT.getRelationship())
+			        || guardianRelationValue.equalsIgnoreCase(Relationship.MATERNAL_UNCLE.getRelationship())
+			        || guardianRelationValue.equalsIgnoreCase(Relationship.PATERNAL_UNCLE.getRelationship())) {
+			    isValidGuardian = validateUncleAuntRelationship(applicantFields, guardianInfoJson,
+			            registrationStatusDto, description);
 			}
+
 
 			if (!isValidGuardian) {
 
@@ -736,10 +752,10 @@ public class CitizenshipVerificationProcessor {
 			isValidGuardian = false;
 		}
 
-		Map<String, String> guardian1Map = extractDemographicss(guardianRelationValue, guardianInfoJson);
+		Map<String, String> guardian1Map = extractguardianDemographics(guardianRelationValue, guardianInfoJson);
 		regProcLogger.info("Extracted demographics for {}: {}", guardianRelationValue, guardian1Map);
 
-		Map<String, String> guardian2Map = extractApplicantDemographicss(applicantFields);
+		Map<String, String> guardian2Map = extractguardianApplicantDemographics(applicantFields);
 		regProcLogger.info("Extracted demographics for applicant: {}", guardian2Map);
 
 		boolean isValidTribeAndClan = ValidateguardianTribeAndClan(guardian1Map, guardian2Map, registrationStatusDto,
@@ -749,7 +765,7 @@ public class CitizenshipVerificationProcessor {
 		return isValidGuardian && isValidTribeAndClan;
 	}
 
-	private Map<String, String> extractDemographicss(String guardianRelationValue, JSONObject guardianInfoJson) {
+	private Map<String, String> extractguardianDemographics(String guardianRelationValue, JSONObject guardianInfoJson) {
 		Map<String, String> guardian1Map = new HashMap<>();
 		guardian1Map.put(MappingJsonConstants.PERSON, guardianRelationValue + " in NIRA System");
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -784,15 +800,13 @@ public class CitizenshipVerificationProcessor {
 		}
 	}
 
-	private Map<String, String> extractApplicantDemographicss(Map<String, String> applicantFields) {
+	private Map<String, String> extractguardianApplicantDemographics(Map<String, String> applicantFields) {
 		Map<String, String> guardian2Map = new HashMap<>();
-		guardian2Map.put(MappingJsonConstants.PERSON, "Guardian in Form");
+		guardian2Map.put(MappingJsonConstants.PERSON, "Applicant");
 		ObjectMapper objectMapper = new ObjectMapper();
 
-		extractAndPutValueee(guardian2Map, MappingJsonConstants.TRIBE_ON_FORM,
-				applicantFields.get(MappingJsonConstants.GUARDIAN_TRIBE_FORM), objectMapper);
-		extractAndPutValueee(guardian2Map, MappingJsonConstants.CLAN_ON_FORM,
-				applicantFields.get(MappingJsonConstants.GUARDIAN_CLAN_FORM), objectMapper);
+		extractAndPutValueee(guardian2Map, MappingJsonConstants.TRIBE,applicantFields.get(MappingJsonConstants.APPLICANT_TRIBE), objectMapper);
+		extractAndPutValueee(guardian2Map, MappingJsonConstants.CLAN,applicantFields.get(MappingJsonConstants.APPLICANT_CLAN), objectMapper);
 
 		return guardian2Map;
 	}
@@ -857,10 +871,10 @@ public class CitizenshipVerificationProcessor {
 
 		boolean isValidGuardian = true;
 
-		Map<String, String> guardian1Map = extractDemographicss(guardianRelationValue, guardianInfoJson);
+		Map<String, String> guardian1Map = extractguardianDemographics(guardianRelationValue, guardianInfoJson);
 		regProcLogger.info("Extracted demographics for {}: {}", guardianRelationValue, guardian1Map);
 
-		Map<String, String> guardian2Map = extractApplicantDemographicss(applicantFields);
+		Map<String, String> guardian2Map = extractguardianApplicantDemographics(applicantFields);
 		regProcLogger.info("Extracted demographics for applicant: {}", guardian2Map);
 
         ValidateguardianTribeAndClan(guardian1Map, guardian2Map, registrationStatusDto, description,
@@ -903,10 +917,10 @@ public class CitizenshipVerificationProcessor {
 
 		boolean isValidGuardian = true;
 
-		Map<String, String> guardian1Map = extractDemographicss(guardianRelationValue, guardianInfoJson);
+		Map<String, String> guardian1Map = extractguardianDemographics(guardianRelationValue, guardianInfoJson);
 		regProcLogger.info("Extracted demographics for {}: {}", guardianRelationValue, guardian1Map);
 
-		Map<String, String> guardian2Map = extractApplicantDemographicss(applicantFields);
+		Map<String, String> guardian2Map = extractguardianApplicantDemographics(applicantFields);
 		regProcLogger.info("Extracted demographics for applicant: {}", guardian2Map);
 
 		ValidateguardianTribeAndClan(guardian1Map, guardian2Map, registrationStatusDto, description,
