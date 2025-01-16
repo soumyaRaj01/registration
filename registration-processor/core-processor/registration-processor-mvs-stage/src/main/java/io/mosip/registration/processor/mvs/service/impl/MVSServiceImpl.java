@@ -217,6 +217,7 @@ public class MVSServiceImpl implements MVSService {
 		LogDescription description = new LogDescription();
 
 		SyncRegistrationEntity regEntity = syncRegistrationService.findByWorkflowInstanceId(messageDTO.getWorkflowInstanceId());
+		regProcLogger.info("instance id: " + messageDTO.getWorkflowInstanceId() + " reg entity: " + regEntity);
 		InternalRegistrationStatusDto registrationStatusDto = registrationStatusService.getRegistrationStatus(
 				messageDTO.getRid(), messageDTO.getReg_type(), messageDTO.getIteration(),
 				messageDTO.getWorkflowInstanceId());
