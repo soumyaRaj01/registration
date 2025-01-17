@@ -216,8 +216,9 @@ public class MVSServiceImpl implements MVSService {
 		boolean isTransactionSuccessful = true;
 		LogDescription description = new LogDescription();
 
-		SyncRegistrationEntity regEntity = syncRegistrationService.findByWorkflowInstanceId(messageDTO.getWorkflowInstanceId());
-		regProcLogger.info("instance id: " + messageDTO.getWorkflowInstanceId() + " reg entity: " + regEntity);
+		List<SyncRegistrationEntity> syncRegistrationEntityList = syncRegistrationService.findByRegistrationId(messageDTO.getRid());
+		SyncRegistrationEntity regEntity = !CollectionUtils.isEmpty(syncRegistrationEntityList) ? syncRegistrationEntityList.iterator().next() : null;
+		
 		InternalRegistrationStatusDto registrationStatusDto = registrationStatusService.getRegistrationStatus(
 				messageDTO.getRid(), messageDTO.getReg_type(), messageDTO.getIteration(),
 				messageDTO.getWorkflowInstanceId());
