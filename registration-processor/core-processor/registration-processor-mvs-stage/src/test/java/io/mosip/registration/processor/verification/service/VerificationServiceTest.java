@@ -149,7 +149,7 @@ public class VerificationServiceTest {
 
 
 	private InternalRegistrationStatusDto registrationStatusDto;
-	private List<SyncRegistrationEntity> regEntities;
+	private SyncRegistrationEntity regEntity;
 	private VerificationPKEntity PKId;
 	private ManualVerificationDTO manualVerificationDTO;
 	private MatchDetail matchDetail=new MatchDetail();
@@ -223,10 +223,8 @@ public class VerificationServiceTest {
 
 		manualVerificationDTO = new ManualVerificationDTO();
 		registrationStatusDto = new InternalRegistrationStatusDto();
-		regEntities = new ArrayList<>();
-		SyncRegistrationEntity regEntity = new SyncRegistrationEntity();
+		regEntity = new SyncRegistrationEntity();
 		regEntity.setReferenceId("1234");
-		regEntities.add(regEntity);
 		dto = new UserDto();
 
 		PKId = new VerificationPKEntity();
@@ -335,8 +333,8 @@ public class VerificationServiceTest {
 		Mockito.when(env.getProperty(ApiName.DATASHARECREATEURL.name())).thenReturn("/v1/datashare/create");
 		Mockito.when(registrationStatusService.getRegistrationStatus(anyString(), any(), any(), any()))
 				.thenReturn(registrationStatusDto);
-		Mockito.when(syncRegistrationService.findByRegistrationId(anyString()))
-		.thenReturn(regEntities);
+		Mockito.when(syncRegistrationService.findByWorkflowInstanceId(anyString()))
+		.thenReturn(regEntity);
 
 		Mockito.when(packetManagerService.getFields(anyString(), any(), anyString(), any())).thenReturn(identity);
 		Mockito.when(packetManagerService.getBiometrics(anyString(), anyString(), any(), anyString(), any()))
