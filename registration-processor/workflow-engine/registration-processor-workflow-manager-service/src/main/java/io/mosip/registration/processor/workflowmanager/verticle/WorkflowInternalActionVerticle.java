@@ -471,7 +471,11 @@ public class WorkflowInternalActionVerticle extends MosipVerticleAPIManager {
 		workflowCompletedEventDTO.setResultCode(registrationStatusDto.getStatusCode());
 		workflowCompletedEventDTO.setWorkflowType(registrationStatusDto.getRegistrationType());
 		if (registrationStatusDto.getStatusCode().equalsIgnoreCase(RegistrationStatusCode.REJECTED.toString())) {
-			workflowCompletedEventDTO.setErrorCode(RegistrationExceptionTypeCode.PACKET_REJECTED.name());
+			if (registrationStatusDto.getRegistrationStageName().contains(ProviderStageName.MVS.getValue())) {
+				workflowCompletedEventDTO.setErrorCode(RegistrationExceptionTypeCode.MVS_PACKET_REJECTED.name());
+			} else {
+				workflowCompletedEventDTO.setErrorCode(RegistrationExceptionTypeCode.PACKET_REJECTED.name());
+			}
 		}
 		if (registrationStatusDto.getStatusCode().equalsIgnoreCase(RegistrationStatusCode.FAILED.toString())) {
 			workflowCompletedEventDTO.setErrorCode(RegistrationExceptionTypeCode.PACKET_FAILED.name());
