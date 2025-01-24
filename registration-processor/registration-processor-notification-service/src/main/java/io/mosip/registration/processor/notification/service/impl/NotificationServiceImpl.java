@@ -199,6 +199,11 @@ public class NotificationServiceImpl implements NotificationService {
 				}
 
 				Map<String, Object> attributes = new HashMap<>();
+				
+				if (object.getNotificationAttributes() != null && !object.getNotificationAttributes().isEmpty()) {
+					attributes.putAll(object.getNotificationAttributes());
+				}
+				
 				String[] ccEMailList = null;
 
 				if (isNotificationTypesEmpty()) {

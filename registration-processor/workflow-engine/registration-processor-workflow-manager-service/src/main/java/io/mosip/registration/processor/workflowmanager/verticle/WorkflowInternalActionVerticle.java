@@ -338,7 +338,7 @@ public class WorkflowInternalActionVerticle extends MosipVerticleAPIManager {
 			workflowActionService.processWorkflowAction(internalRegistrationStatusDtos,
 					WorkflowActionCode.RESUME_PROCESSING.toString());
 		} else {
-			sendWorkflowCompletedWebSubEvent(registrationStatusDto);
+			sendWorkflowCompletedWebSubEvent(registrationStatusDto, workflowInternalActionDTO);
 		}
 
 	}
@@ -370,7 +370,7 @@ public class WorkflowInternalActionVerticle extends MosipVerticleAPIManager {
 			workflowActionService.processWorkflowAction(internalRegistrationStatusDtos,
 					WorkflowActionCode.RESUME_PROCESSING.toString());
 		} else {
-			sendWorkflowCompletedWebSubEvent(registrationStatusDto);
+			sendWorkflowCompletedWebSubEvent(registrationStatusDto, workflowInternalActionDTO);
 		}
 
 	}
@@ -403,7 +403,7 @@ public class WorkflowInternalActionVerticle extends MosipVerticleAPIManager {
 			workflowActionService.processWorkflowAction(internalRegistrationStatusDtos,
 					WorkflowActionCode.RESUME_PROCESSING.toString());
 		} else {
-			sendWorkflowCompletedWebSubEvent(registrationStatusDto);
+			sendWorkflowCompletedWebSubEvent(registrationStatusDto, workflowInternalActionDTO);
 		}
 
 	}
@@ -465,11 +465,12 @@ public class WorkflowInternalActionVerticle extends MosipVerticleAPIManager {
 		return STAGE_PROPERTY_PREFIX;
 	}
 
-	private void sendWorkflowCompletedWebSubEvent(InternalRegistrationStatusDto registrationStatusDto) {
+	private void sendWorkflowCompletedWebSubEvent(InternalRegistrationStatusDto registrationStatusDto, WorkflowInternalActionDTO workflowInternalActionDTO) {
 		WorkflowCompletedEventDTO workflowCompletedEventDTO = new WorkflowCompletedEventDTO();
 		workflowCompletedEventDTO.setInstanceId(registrationStatusDto.getRegistrationId());
 		workflowCompletedEventDTO.setResultCode(registrationStatusDto.getStatusCode());
 		workflowCompletedEventDTO.setWorkflowType(registrationStatusDto.getRegistrationType());
+		workflowCompletedEventDTO.setNotificationAttributes(workflowInternalActionDTO.getNotificationAttributes());
 		if (registrationStatusDto.getStatusCode().equalsIgnoreCase(RegistrationStatusCode.REJECTED.toString())) {
 			if (registrationStatusDto.getRegistrationStageName().contains(ProviderStageName.MVS.getValue())) {
 				workflowCompletedEventDTO.setErrorCode(RegistrationExceptionTypeCode.MVS_PACKET_REJECTED.name());
