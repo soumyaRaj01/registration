@@ -18,7 +18,7 @@ import io.mosip.registration.processor.status.config.RegistrationStatusBeanConfi
 		"io.mosip.registration.processor.transaction.*", "io.mosip.registration.processor.packet.storage.config",
 		"${mosip.auth.adapter.impl.basepackage}" },
 excludeFilters = @Filter(type = FilterType.ASSIGNABLE_TYPE, value = {RegistrationStatusBeanConfig.class,
-		RestConfigBean.class}))
+				RestConfigBean.class }))
 @EnableScheduling
 public class RegistrationTransactionServiceApplication {
 
